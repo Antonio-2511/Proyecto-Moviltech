@@ -1,0 +1,37 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Pedido #{{ pedido.id }}{% endblock %}
+
+{% block body %}
+    <h1>Pedido #{{ pedido.id }}</h1>
+
+    <p><strong>Fecha:</strong> {{ pedido.fecha|date('d/m/Y H:i') }}</p>
+    <p><strong>Estado:</strong> {{ pedido.estado }}</p>
+
+    <table class="table">
+        <thead>
+        <tr>
+            <th>Producto</th>
+            <th>Cantidad</th>
+            <th>Precio unitario</th>
+            <th>Subtotal</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for detalle in pedido.detalles %}
+            <tr>
+                <td>{{ detalle.producto.nombre }}</td>
+                <td>{{ detalle.cantidad }}</td>
+                <td>{{ detalle.precioUnitario }} €</td>
+                <td>{{ detalle.cantidad * detalle.precioUnitario }} €</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+
+    <h3>Total: {{ pedido.total }} €</h3>
+
+    <a href="{{ path('pedido_index') }}" class="btn btn-secondary">
+        Volver
+    </a>
+{% endblock %}

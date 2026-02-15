@@ -1,0 +1,107 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Carrito{% endblock %}
+
+{% block body %}
+
+    <h1 class="mb-4">Carrito</h1>
+
+    {% if productos is empty %}
+
+        <div class="alert alert-info">
+            No hay productos en el carrito.
+        </div>
+
+        <a href="{{ path('app_home') }}" class="btn btn-primary">
+            Volver al catálogo
+        </a>
+
+    {% else %}
+
+        <div class="card shadow-sm">
+            <div class="card-body">
+
+                <table class="table align-middle">
+                    <thead class="table-dark">
+                    <tr>
+                        <th>Producto</th>
+                        <th class="text-center">Cantidad</th>
+                        <th class="text-end">Subtotal</th>
+                        <th></th>
+                    </tr>
+                    </thead>
+                    <tbody>
+
+                    {% for item in productos %}
+                        <tr>
+                            <td>{{ item.producto.nombre }}</td>
+
+                            <td class="text-center">
+
+                                <div class="btn-group">
+
+                                    <a href="{{ path('carrito_decrease', {id: item.producto.id}) }}"
+                                       class="btn btn-sm btn-outline-secondary">
+                                        -
+                                    </a>
+
+                                    <span class="btn btn-sm btn-light">
+                                {{ item.cantidad }}
+                            </span>
+
+                                    <a href="{{ path('carrito_increase', {id: item.producto.id}) }}"
+                                       class="btn btn-sm btn-outline-secondary">
+                                        +
+                                    </a>
+
+                                </div>
+
+                            </td>
+
+                            <td class="text-end">
+                                {{ item.subtotal }} €
+                            </td>
+
+                            <td class="text-end">
+                                <a href="{{ path('carrito_remove', {id: item.producto.id}) }}"
+                                   class="btn btn-sm btn-danger">
+                                    Quitar
+                                </a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+
+                    </tbody>
+                </table>
+
+                <hr>
+
+                <div class="d-flex justify-content-between align-items-center">
+
+                    <h4>Total: {{ total }} €</h4>
+
+                    <div>
+                        <a href="{{ path('app_home') }}"
+                           class="btn btn-outline-primary">
+                            Volver al Inicio
+                        </a>
+
+                        <a href="{{ path('carrito_clear') }}"
+                           class="btn btn-warning">
+                            Vaciar carrito
+                        </a>
+
+                        <a href="{{ path('carrito_checkout') }}"
+                           class="btn btn-success">
+                            Confirmar pedido
+                        </a>
+                    </div>
+
+                </div>
+
+            </div>
+        </div>
+
+    {% endif %}
+
+{% endblock %}

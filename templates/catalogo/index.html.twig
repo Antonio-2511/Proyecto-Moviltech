@@ -1,0 +1,37 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Catálogo{% endblock %}
+
+{% block body %}
+    <h1 class="mb-4">Catálogo de productos</h1>
+
+    <div class="row">
+        {% for producto in productos %}
+            <div class="col-md-4 mb-4">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <h5 class="card-title">{{ producto.nombre }}</h5>
+                        <p class="card-text">
+                            {{ producto.descripcion|slice(0, 80) }}...
+                        </p>
+                        <p class="fw-bold">{{ producto.precio }} €</p>
+
+                        <div class="d-flex gap-2">
+                            <a href="{{ path('catalogo_producto', {'id': producto.id}) }}"
+                               class="btn btn-primary btn-sm">
+                                Ver detalle
+                            </a>
+
+                            <a href="{{ path('carrito_add', {'id': producto.id}) }}"
+                               class="btn btn-success btn-sm">
+                                Añadir al carrito
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% else %}
+            <p>No hay productos disponibles.</p>
+        {% endfor %}
+    </div>
+{% endblock %}

@@ -5,34 +5,48 @@ namespace App\Entity;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity]
-class Reseña
+class Resena
 {
+    // Identificador único de la reseña (clave primaria)
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
     private ?int $id = null;
 
+    // Puntuación otorgada al producto (por ejemplo de 1 a 5)
     #[ORM\Column]
     private int $puntuacion;
 
+    // Comentario opcional del usuario
     #[ORM\Column(type: 'text', nullable: true)]
     private ?string $comentario = null;
 
+    // Fecha de creación de la reseña
+    // Se establece automáticamente al crear la instancia
     #[ORM\Column]
     private \DateTimeImmutable $fecha;
 
-    #[ORM\ManyToOne(inversedBy: 'reseñas')]
+    // Relación ManyToOne con User
+    // Un usuario puede escribir muchas reseñas
+    #[ORM\ManyToOne(inversedBy: 'resenas')]
     #[ORM\JoinColumn(nullable: false)]
     private ?User $usuario = null;
 
-    #[ORM\ManyToOne(inversedBy: 'reseñas')]
+    // Relación ManyToOne con Producto
+    // Un producto puede tener múltiples reseñas
+    #[ORM\ManyToOne(inversedBy: 'resenas')]
     #[ORM\JoinColumn(nullable: false)]
     private ?Producto $producto = null;
 
     public function __construct()
     {
+        // Se asigna automáticamente la fecha actual al crear la reseña
         $this->fecha = new \DateTimeImmutable();
     }
+
+    // =========================
+    // Getters y setters
+    // =========================
 
     public function getId(): ?int
     {

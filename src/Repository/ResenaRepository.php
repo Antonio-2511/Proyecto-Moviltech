@@ -2,14 +2,14 @@
 
 namespace App\Repository;
 
-use App\Entity\Reseña;
+use App\Entity\Resena;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
-class ReseñaRepository extends ServiceEntityRepository
+class ResenaRepository extends ServiceEntityRepository
 {
     public function __construct(ManagerRegistry $registry)
     {
-        parent::__construct($registry, Reseña::class);
+        parent::__construct($registry, Resena::class);
     }
 }

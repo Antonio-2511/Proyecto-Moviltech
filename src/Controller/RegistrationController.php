@@ -15,29 +15,41 @@ use Symfony\Component\Routing\Attribute\Route;
 class RegistrationController extends AbstractController
 {
     #[Route('/register', name: 'app_register')]
-    public function register(Request $request, UserPasswordHasherInterface $userPasswordHasher, Security $security, EntityManagerInterface $entityManager): Response
-    {
+    public function register(
+        Request $request,
+        UserPasswordHasherInterface $userPasswordHasher,
+        Security $security,
+        EntityManagerInterface $entityManager
+    ): Response {
+
+        // Se crea una nueva instancia de usuario
         $user = new User();
+
+        // Se construye el formulario de registro asociado a la entidad
         $form = $this->createForm(RegistrationFormType::class, $user);
         $form->handleRequest($request);
 
+        // Si el formulario es válido, se procede al registro
         if ($form->isSubmitted() && $form->isValid()) {
-            /** @var string $plainPassword */
-            $plainPassword = $form->get('plainPassword')->getData();
 
-            // encode the plain password
-            $user->setPassword($userPasswordHasher->hashPassword($user, $plainPassword));
+            // Se encripta la contraseña antes de guardarla en base de datos
+            $hashedPassword = $userPasswordHasher->hashPassword(
+                $user,
+                $user->getPassword()
+            );
 
+            $user->setPassword($hashedPassword);
+
+            // Se guarda el usuario en base de datos
             $entityManager->persist($user);
             $entityManager->flush();
 
-            // do anything else you need here, like send an email
-
-            return $security->login($user, 'form_login', 'main');
+            // Se inicia sesión automáticamente tras el registro
+            return $security->login($user);
         }
 
         return $this->render('registration/register.html.twig', [
-            'registrationForm' => $form,
+            'registrationForm' => $form->createView(),
         ]);
     }
 }

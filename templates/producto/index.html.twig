@@ -1,0 +1,82 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Gestión de productos{% endblock %}
+
+{% block body %}
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="mb-0">Gestión de productos</h1>
+
+        <a href="{{ path('app_producto_new') }}" class="btn btn-success">
+            Nuevo producto
+        </a>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+
+            {% if productos is empty %}
+                <div class="alert alert-info mb-0">
+                    No hay productos registrados.
+                </div>
+            {% else %}
+
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-dark">
+                        <tr>
+                            <th>Nombre</th>
+                            <th>Precio</th>
+                            <th>Stock</th>
+                            <th>Categoría</th>
+                            <th class="text-end">Acciones</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% for producto in productos %}
+                            <tr>
+                                <td>{{ producto.nombre }}</td>
+
+                                <td class="fw-bold">
+                                    {{ producto.precio }} €
+                                </td>
+
+                                <td>
+                                    {% if producto.stock > 0 %}
+                                        <span class="badge bg-success">
+                                        {{ producto.stock }}
+                                    </span>
+                                    {% else %}
+                                        <span class="badge bg-danger">
+                                        Sin stock
+                                    </span>
+                                    {% endif %}
+                                </td>
+
+                                <td>
+                                    {{ producto.categoria.nombre }}
+                                </td>
+
+                                <td class="text-end">
+                                    <a href="{{ path('app_producto_show', {'id': producto.id}) }}"
+                                       class="btn btn-sm btn-outline-primary">
+                                        Ver
+                                    </a>
+
+                                    <a href="{{ path('app_producto_edit', {'id': producto.id}) }}"
+                                       class="btn btn-sm btn-outline-warning">
+                                        Editar
+                                    </a>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+            {% endif %}
+
+        </div>
+    </div>
+
+{% endblock %}
