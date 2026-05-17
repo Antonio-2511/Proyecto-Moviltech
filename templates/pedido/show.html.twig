@@ -31,7 +31,9 @@
 
     <h3>Total: {{ pedido.total }} €</h3>
 
-    <a href="{{ path('pedido_index') }}" class="btn btn-secondary">
-        Volver
-    </a>
+    {% if is_granted('ROLE_ADMIN') %}
+        <a href="{{ path('admin_pedido_index') }}" class="btn btn-secondary">Volver</a>
+    {% else %}
+        <a href="{{ path('pedido_index') }}" class="btn btn-secondary">Volver</a>
+    {% endif %}
 {% endblock %}

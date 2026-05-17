@@ -85,8 +85,13 @@ final class ProductoController extends AbstractController
     #[Route('/{id}', name: 'app_producto_delete', methods: ['POST'])]
     public function delete(Request $request, Producto $producto, EntityManagerInterface $entityManager): Response
     {
-        // Protección CSRF para evitar eliminación maliciosa
         if ($this->isCsrfTokenValid('delete' . $producto->getId(), $request->request->get('_token'))) {
+
+            // NUEVO: comprobar si tiene pedidos asociados antes de borrar
+            if (!$producto->getDetallesPedido()->isEmpty()) {
+                $this->addFlash('danger', 'No se puede eliminar este producto porque está asociado a uno o más pedidos.');
+                return $this->redirectToRoute('app_producto_index');
+            }
 
             $entityManager->remove($producto);
             $entityManager->flush();

@@ -60,8 +60,9 @@
                                     {{ pedido.total }} €
                                 </td>
 
+                                {# Por esto: #}
                                 <td class="text-end">
-                                    <a href="{{ path('pedido_show', {id: pedido.id}) }}"
+                                    <a href="{{ path('admin_pedido_show', {id: pedido.id}) }}"
                                        class="btn btn-sm btn-outline-primary">
                                         Ver detalle
                                     </a>
@@ -75,6 +76,12 @@
             {% endif %}
 
         </div>
+    </div>
+
+    <div class="mt-3">
+        <a href="{{ path('admin_index') }}" class="btn btn-secondary">
+            Volver al panel de administración
+        </a>
     </div>
 
 {% endblock %}
