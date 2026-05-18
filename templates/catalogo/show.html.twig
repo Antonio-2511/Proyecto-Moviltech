@@ -86,37 +86,41 @@
 
             <hr>
 
-            <h4 class="mb-3">Añadir reseña</h4>
+            {% if haComprado %}
 
-            {{ form_start(form, {
-                action: path('resena_new', {'id': producto.id}),
-                attr: { class: 'mb-4' }
-            }) }}
+                <h4 class="mb-3">Añadir reseña</h4>
 
-            <div class="mb-3">
-                {{ form_label(form.puntuacion) }}
-                {{ form_widget(form.puntuacion, {'attr': {'class': 'form-control'}}) }}
-                {{ form_errors(form.puntuacion) }}
-            </div>
+                {{ form_start(form, {
+                    action: path('resena_new', {'id': producto.id}),
+                    attr: { class: 'mb-4' }
+                }) }}
 
-            <div class="mb-3">
-                {{ form_label(form.comentario) }}
-                {{ form_widget(form.comentario, {'attr': {'class': 'form-control', 'rows': 3}}) }}
-                {{ form_errors(form.comentario) }}
-            </div>
+                <div class="mb-3">
+                    {{ form_label(form.puntuacion) }}
+                    {{ form_widget(form.puntuacion, {'attr': {'class': 'form-control'}}) }}
+                    {{ form_errors(form.puntuacion) }}
+                </div>
 
-            <button class="btn btn-primary">
-                Enviar reseña
-            </button>
+                <div class="mb-3">
+                    {{ form_label(form.comentario) }}
+                    {{ form_widget(form.comentario, {'attr': {'class': 'form-control', 'rows': 3}}) }}
+                    {{ form_errors(form.comentario) }}
+                </div>
 
-            {{ form_end(form) }}
+                <button class="btn btn-primary">
+                    Enviar reseña
+                </button>
+
+                {{ form_end(form) }}
+
+            {% else %}
+                <p class="text-muted mt-3">Solo puedes reseñar productos que hayas comprado.</p>
+            {% endif %}
 
         {% else %}
-
             <p class="mt-3">
                 <a href="{{ path('app_login') }}">Inicia sesión</a> para dejar una reseña.
             </p>
-
         {% endif %}
 
     </div>

@@ -24,4 +24,27 @@ class ProductoRepository extends ServiceEntityRepository
             ->getResult();
     }
 
+    public function findByFiltros(?int $categoriaId, ?float $precioMax, ?string $marca): array
+    {
+        $qb = $this->createQueryBuilder('p')
+            ->orderBy('p.nombre', 'ASC');
+
+        if ($categoriaId) {
+            $qb->andWhere('p.categoria = :categoria')
+                ->setParameter('categoria', $categoriaId);
+        }
+
+        if ($precioMax) {
+            $qb->andWhere('p.precio <= :precioMax')
+                ->setParameter('precioMax', $precioMax);
+        }
+
+        if ($marca) {
+            $qb->andWhere('p.marca = :marca')
+                ->setParameter('marca', $marca);
+        }
+
+        return $qb->getQuery()->getResult();
+    }
+
 }
