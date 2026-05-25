@@ -12,17 +12,24 @@ use App\Repository\PedidoRepository;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[Route('/admin/pedido')]
-#[IsGranted('ROLE_ADMIN')] // Solo usuarios con rol ADMIN pueden acceder a este controlador
+#[IsGranted('ROLE_ADMIN')]
 class AdminPedidoController extends AbstractController
 {
     #[Route('/', name: 'admin_pedido_index')]
     public function index(PedidoRepository $pedidoRepository): Response
     {
-        // Obtiene todos los pedidos ordenados por fecha descendente (más recientes primero)
         $pedidos = $pedidoRepository->findBy([], ['fecha' => 'DESC']);
 
         return $this->render('admin_pedido/index.html.twig', [
             'pedidos' => $pedidos,
+        ]);
+    }
+
+    #[Route('/{id}', name: 'admin_pedido_show', methods: ['GET'])]
+    public function show(Pedido $pedido): Response
+    {
+        return $this->render('admin_pedido/show.html.twig', [
+            'pedido' => $pedido,
         ]);
     }
 
@@ -32,19 +39,19 @@ class AdminPedidoController extends AbstractController
         Request $request,
         EntityManagerInterface $em
     ): Response {
-
-        // Se obtiene el nuevo estado enviado desde el formulario
-        $nuevoEstado = $request->request->get('estado');
-
-        // Lista blanca de estados permitidos
+        $nuevoEstado   = $request->request->get('estado');
         $estadosValidos = ['pendiente', 'pagado', 'enviado', 'entregado', 'cancelado'];
 
-        // Se valida que el estado recibido sea válido antes de actualizar
         if (in_array($nuevoEstado, $estadosValidos)) {
             $pedido->setEstado($nuevoEstado);
-            $em->flush(); // Se guarda el cambio en base de datos
-
+            $em->flush();
             $this->addFlash('success', 'Estado actualizado correctamente.');
+        }
+
+        // Si viene del show, volvemos al show; si no, al listado
+        $referer = $request->headers->get('referer', '');
+        if (str_contains($referer, '/admin/pedido/' . $pedido->getId())) {
+            return $this->redirectToRoute('admin_pedido_show', ['id' => $pedido->getId()]);
         }
 
         return $this->redirectToRoute('admin_pedido_index');

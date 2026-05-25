@@ -3,105 +3,91 @@
 {% block title %}Carrito{% endblock %}
 
 {% block body %}
+    <div class="container mt-4">
 
-    <h1 class="mb-4">Carrito</h1>
+        <h1 class="mb-4">Tu carrito</h1>
 
-    {% if productos is empty %}
+        {% for message in app.flashes('success') %}
+            <div class="alert alert-success">{{ message }}</div>
+        {% endfor %}
+        {% for message in app.flashes('warning') %}
+            <div class="alert alert-warning">{{ message }}</div>
+        {% endfor %}
+        {% for message in app.flashes('danger') %}
+            <div class="alert alert-danger">{{ message }}</div>
+        {% endfor %}
+        {% for message in app.flashes('info') %}
+            <div class="alert alert-info">{{ message }}</div>
+        {% endfor %}
 
-        <div class="alert alert-info">
-            No hay productos en el carrito.
-        </div>
+        {% if productos is empty %}
+            <p class="text-muted">El carrito está vacío.</p>
+            <a href="{{ path('app_home') }}" class="btn btn-primary">Ver catálogo</a>
+        {% else %}
 
-        <a href="{{ path('app_home') }}" class="btn btn-primary">
-            Volver al catálogo
-        </a>
-
-    {% else %}
-
-        <div class="card shadow-sm">
-            <div class="card-body">
-
-                <table class="table align-middle">
-                    <thead class="table-dark">
+            <table class="table align-middle">
+                <thead>
+                <tr>
+                    <th>Producto</th>
+                    <th>Precio unitario</th>
+                    <th>Cantidad</th>
+                    <th>Subtotal</th>
+                    <th>Acciones</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for item in productos %}
                     <tr>
-                        <th>Producto</th>
-                        <th class="text-center">Cantidad</th>
-                        <th class="text-end">Subtotal</th>
-                        <th></th>
+                        <td>{{ item.producto.nombre }}</td>
+                        <td>{{ item.producto.precio }} €</td>
+                        <td>
+                            <a href="{{ path('carrito_decrease', {'id': item.producto.id}) }}"
+                               class="btn btn-sm btn-outline-secondary">–</a>
+                            {{ item.cantidad }}
+                            <a href="{{ path('carrito_increase', {'id': item.producto.id}) }}"
+                               class="btn btn-sm btn-outline-secondary">+</a>
+                        </td>
+                        <td>{{ item.subtotal }} €</td>
+                        <td>
+                            <a href="{{ path('carrito_remove', {'id': item.producto.id}) }}"
+                               class="btn btn-sm btn-danger">Eliminar</a>
+                        </td>
                     </tr>
-                    </thead>
-                    <tbody>
+                {% endfor %}
+                </tbody>
+            </table>
 
-                    {% for item in productos %}
-                        <tr>
-                            <td>{{ item.producto.nombre }}</td>
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <strong class="fs-5">Total: {{ total }} €</strong>
+                <a href="{{ path('carrito_clear') }}" class="btn btn-outline-danger btn-sm">
+                    Vaciar carrito
+                </a>
+            </div>
 
-                            <td class="text-center">
+            {# ── Formulario de checkout con cupón ── #}
+            <form method="POST" action="{{ path('carrito_checkout') }}">
 
-                                <div class="btn-group">
-
-                                    <a href="{{ path('carrito_decrease', {id: item.producto.id}) }}"
-                                       class="btn btn-sm btn-outline-secondary">
-                                        -
-                                    </a>
-
-                                    <span class="btn btn-sm btn-light">
-                                {{ item.cantidad }}
-                            </span>
-
-                                    <a href="{{ path('carrito_increase', {id: item.producto.id}) }}"
-                                       class="btn btn-sm btn-outline-secondary">
-                                        +
-                                    </a>
-
-                                </div>
-
-                            </td>
-
-                            <td class="text-end">
-                                {{ item.subtotal }} €
-                            </td>
-
-                            <td class="text-end">
-                                <a href="{{ path('carrito_remove', {id: item.producto.id}) }}"
-                                   class="btn btn-sm btn-danger">
-                                    Quitar
-                                </a>
-                            </td>
-                        </tr>
-                    {% endfor %}
-
-                    </tbody>
-                </table>
-
-                <hr>
-
-                <div class="d-flex justify-content-between align-items-center">
-
-                    <h4>Total: {{ total }} €</h4>
-
-                    <div>
-                        <a href="{{ path('app_home') }}"
-                           class="btn btn-outline-primary">
-                            Volver al Inicio
-                        </a>
-
-                        <a href="{{ path('carrito_clear') }}"
-                           class="btn btn-warning">
-                            Vaciar carrito
-                        </a>
-
-                        <a href="{{ path('carrito_checkout') }}"
-                           class="btn btn-success">
-                            Confirmar pedido
-                        </a>
+                <div class="card p-3 mb-3 shadow-sm" style="max-width: 420px;">
+                    <label class="form-label fw-bold" for="cupon">
+                        ¿Tienes un cupón de descuento?
+                    </label>
+                    <div class="input-group">
+                        <input type="text"
+                               id="cupon"
+                               name="cupon"
+                               class="form-control text-uppercase"
+                               placeholder="Ej: VERANO10"
+                               autocomplete="off">
+                        <button type="submit" class="btn btn-success">
+                            Finalizar compra
+                        </button>
                     </div>
-
+                    <small class="text-muted mt-1">El campo es opcional.</small>
                 </div>
 
-            </div>
-        </div>
+            </form>
 
-    {% endif %}
+        {% endif %}
 
+    </div>
 {% endblock %}

@@ -1,0 +1,156 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Detalle del pedido #{{ pedido.id }}{% endblock %}
+
+{% block body %}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="mb-0">Pedido #{{ pedido.id }}</h1>
+    <a href="{{ path('admin_pedido_index') }}" class="btn btn-secondary">
+        Volver a pedidos
+    </a>
+</div>
+
+{# Mensajes flash #}
+{% for message in app.flashes('success') %}
+    <div class="alert alert-success">{{ message }}</div>
+{% endfor %}
+
+<div class="row g-4">
+
+    {# ── Info general ── #}
+    <div class="col-md-6">
+        <div class="card shadow-sm h-100">
+            <div class="card-header table-dark text-white fw-bold">
+                Información del pedido
+            </div>
+            <div class="card-body">
+                <table class="table table-borderless mb-0">
+                    <tr>
+                        <th class="text-muted" style="width:40%">ID</th>
+                        <td>#{{ pedido.id }}</td>
+                    </tr>
+                    <tr>
+                        <th class="text-muted">Fecha</th>
+                        <td>{{ pedido.fecha|date('d/m/Y H:i') }}</td>
+                    </tr>
+                    <tr>
+                        <th class="text-muted">Estado</th>
+                        <td>
+                            {% set colores = {
+                                'pendiente':  'warning',
+                                'pagado':     'info',
+                                'enviado':    'primary',
+                                'entregado':  'success',
+                                'cancelado':  'danger'
+                            } %}
+                            <span class="badge bg-{{ colores[pedido.estado] ?? 'secondary' }}">
+                                {{ pedido.estado|capitalize }}
+                            </span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th class="text-muted">Total</th>
+                        <td class="fw-bold fs-5">{{ pedido.total }} €</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    {# ── Info usuario ── #}
+    <div class="col-md-6">
+        <div class="card shadow-sm h-100">
+            <div class="card-header table-dark text-white fw-bold">
+                Cliente
+            </div>
+            <div class="card-body">
+                <table class="table table-borderless mb-0">
+                    <tr>
+                        <th class="text-muted" style="width:40%">Nombre</th>
+                        <td>{{ pedido.usuario.nombre }}</td>
+                    </tr>
+                    <tr>
+                        <th class="text-muted">Email</th>
+                        <td>{{ pedido.usuario.email }}</td>
+                    </tr>
+                    <tr>
+                        <th class="text-muted">Registrado</th>
+                        <td>{{ pedido.usuario.fechaRegistro|date('d/m/Y') }}</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    {# ── Cambiar estado ── #}
+    <div class="col-12">
+        <div class="card shadow-sm">
+            <div class="card-header table-dark text-white fw-bold">
+                Cambiar estado del pedido
+            </div>
+            <div class="card-body">
+                <form method="post" action="{{ path('admin_pedido_estado', {id: pedido.id}) }}"
+                      class="d-flex align-items-center gap-3">
+                    <select name="estado" class="form-select" style="max-width: 220px;">
+                        {% for estado in ['pendiente','pagado','enviado','entregado','cancelado'] %}
+                            <option value="{{ estado }}"
+                                    {% if pedido.estado == estado %}selected{% endif %}>
+                                {{ estado|capitalize }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                    <button type="submit" class="btn btn-primary">
+                        Guardar cambio
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    {# ── Líneas del pedido ── #}
+    <div class="col-12">
+        <div class="card shadow-sm">
+            <div class="card-header table-dark text-white fw-bold">
+                Productos del pedido
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Producto</th>
+                                <th class="text-center">Cantidad</th>
+                                <th class="text-end">Precio unitario</th>
+                                <th class="text-end">Subtotal</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for detalle in pedido.detalles %}
+                            <tr>
+                                <td>{{ detalle.producto.nombre }}</td>
+                                <td class="text-center">{{ detalle.cantidad }}</td>
+                                <td class="text-end">{{ detalle.precioUnitario }} €</td>
+                                <td class="text-end fw-bold">
+                                    {{ (detalle.precioUnitario * detalle.cantidad)|number_format(2, ',', '.') }} €
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                        <tfoot class="table-light">
+                            <tr>
+                                <td colspan="3" class="text-end fw-bold">TOTAL</td>
+                                <td class="text-end fw-bold fs-5 text-success">
+                                    {{ pedido.total }} €
+                                </td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+{% endblock %}

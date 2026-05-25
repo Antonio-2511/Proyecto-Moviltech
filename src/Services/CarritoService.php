@@ -1,20 +1,26 @@
 <?php
 
-namespace App\Service;
+namespace App\Services;
 
 use App\Entity\DetallePedido;
 use App\Entity\Pedido;
+use App\Repository\CuponRepository;
 use App\Repository\ProductoRepository;
 use Doctrine\ORM\EntityManagerInterface;
-use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
 
 class CarritoService
 {
     public function __construct(
-        private ProductoRepository $productoRepository,
-        private EntityManagerInterface $entityManager
+        private ProductoRepository    $productoRepository,
+        private EntityManagerInterface $entityManager,
+        private CuponRepository       $cuponRepository,
     ) {}
+
+    // =========================================================
+    // LÓGICA DE CONTENIDO DEL CARRITO
+    //
+    // =========================================================
 
     /**
      * Devuelve los productos del carrito con cantidad y subtotal,
@@ -23,7 +29,7 @@ class CarritoService
     public function obtenerContenido(array $carrito): array
     {
         $productos = [];
-        $total = 0;
+        $total     = 0;
 
         foreach ($carrito as $id => $cantidad) {
             $producto = $this->productoRepository->find($id);
@@ -43,6 +49,11 @@ class CarritoService
 
         return ['productos' => $productos, 'total' => $total];
     }
+
+    // =========================================================
+    // LÓGICA DE MANIPULACIÓN DEL CARRITO
+    //
+    // =========================================================
 
     /**
      * Añade una unidad de un producto al carrito.
@@ -68,7 +79,7 @@ class CarritoService
     }
 
     /**
-     * Elimina un producto del carrito.
+     * Elimina completamente un producto del carrito.
      */
     public function eliminar(int $id, array &$carrito): void
     {
@@ -86,7 +97,8 @@ class CarritoService
     }
 
     /**
-     * Reduce en 1 la cantidad de un producto. Si llega a 0, lo elimina.
+     * Reduce en 1 la cantidad de un producto.
+     * Si llega a 0, lo elimina del carrito.
      */
     public function reducir(int $id, array &$carrito): void
     {
@@ -101,13 +113,64 @@ class CarritoService
         }
     }
 
+    // =========================================================
+    // VALIDACIÓN DE CUPÓN
+    // =========================================================
+
+    /**
+     * Valida un código de cupón y devuelve el total con descuento aplicado.
+     *
+     * Retorna un array con:
+     *   - 'totalFinal'  => float (total con descuento, o el mismo si no hay cupón)
+     *   - 'descuento'   => float (importe ahorrado)
+     *   - 'porcentaje'  => float|null
+     *   - 'error'       => string|null (mensaje si el cupón no es válido)
+     */
+    public function aplicarCupon(?string $codigoCupon, float $total): array
+    {
+        if (empty($codigoCupon)) {
+            return [
+                'totalFinal' => $total,
+                'descuento'  => 0,
+                'porcentaje' => null,
+                'error'      => null,
+            ];
+        }
+
+        $cupon = $this->cuponRepository->findActivoByCodigo($codigoCupon);
+
+        if (!$cupon) {
+            return [
+                'totalFinal' => $total,
+                'descuento'  => 0,
+                'porcentaje' => null,
+                'error'      => 'El cupón "' . $codigoCupon . '" no es válido o ha caducado.',
+            ];
+        }
+
+        $totalFinal = $cupon->aplicarDescuento($total);
+        $descuento  = $total - $totalFinal;
+
+        return [
+            'totalFinal' => round($totalFinal, 2),
+            'descuento'  => round($descuento, 2),
+            'porcentaje' => $cupon->getPorcentaje(),
+            'error'      => null,
+        ];
+    }
+
+    // =========================================================
+    // CHECKOUT
+    //
+    // =========================================================
+
     /**
      * Procesa el checkout: crea el Pedido con sus DetallePedido,
-     * descuenta stock y persiste todo.
+     * aplica el cupón si existe, descuenta stock y persiste todo.
      *
      * Devuelve un mensaje de error si algo falla, o null si todo va bien.
      */
-    public function checkout(array $carrito, UserInterface $usuario): ?string
+    public function checkout(array $carrito, UserInterface $usuario, ?string $codigoCupon = null): ?string
     {
         if (empty($carrito)) {
             return 'El carrito está vacío.';
@@ -137,12 +200,18 @@ class CarritoService
 
             $total += $producto->getPrecio() * $cantidad;
 
+            // Descontar stock
             $producto->setStock($producto->getStock() - $cantidad);
 
             $this->entityManager->persist($detalle);
         }
 
-        $pedido->setTotal($total);
+        // Aplicar cupón si se proporcionó
+        $resultadoCupon = $this->aplicarCupon($codigoCupon, $total);
+
+        // Si el cupón es inválido no bloqueamos el pedido; el controlador
+        // ya habrá mostrado el aviso. Usamos el total sin descuento como fallback.
+        $pedido->setTotal($resultadoCupon['totalFinal']);
 
         $this->entityManager->persist($pedido);
         $this->entityManager->flush();

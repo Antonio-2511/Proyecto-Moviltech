@@ -6,9 +6,6 @@ use App\Entity\Producto;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
-/**
- * @extends ServiceEntityRepository<Producto>
- */
 class ProductoRepository extends ServiceEntityRepository
 {
     public function __construct(ManagerRegistry $registry)
@@ -24,10 +21,19 @@ class ProductoRepository extends ServiceEntityRepository
             ->getResult();
     }
 
-    public function findByFiltros(?int $categoriaId, ?float $precioMax, ?string $marca): array
-    {
+    public function findByFiltros(
+        ?int    $categoriaId,
+        ?float  $precioMax,
+        ?string $marca,
+        ?string $busqueda
+    ): array {
         $qb = $this->createQueryBuilder('p')
             ->orderBy('p.nombre', 'ASC');
+
+        if ($busqueda) {
+            $qb->andWhere('p.nombre LIKE :busqueda')
+                ->setParameter('busqueda', '%' . $busqueda . '%');
+        }
 
         if ($categoriaId) {
             $qb->andWhere('p.categoria = :categoria')
@@ -40,11 +46,10 @@ class ProductoRepository extends ServiceEntityRepository
         }
 
         if ($marca) {
-            $qb->andWhere('p.marca = :marca')
-                ->setParameter('marca', $marca);
+            $qb->andWhere('p.marca LIKE :marca')
+                ->setParameter('marca', '%' . $marca . '%');
         }
 
         return $qb->getQuery()->getResult();
     }
-
 }

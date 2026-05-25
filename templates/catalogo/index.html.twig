@@ -3,14 +3,22 @@
 {% block title %}Catálogo{% endblock %}
 
 {% block body %}
+<div class="container mt-4">
+
 <h1 class="mb-4">Catálogo de productos</h1>
 
-{{# Filtros #}}
+{# Filtros y búsqueda #}
 <div class="card mb-4 shadow-sm">
     <div class="card-body">
         <div class="row g-3 align-items-end">
 
             <div class="col-md-3">
+                <label class="form-label fw-bold">Buscar</label>
+                <input type="text" id="filtro-busqueda" class="form-control"
+                       placeholder="Nombre del producto...">
+            </div>
+
+            <div class="col-md-2">
                 <label class="form-label fw-bold">Categoría</label>
                 <select id="filtro-categoria" class="form-select">
                     <option value="">Todas</option>
@@ -20,13 +28,13 @@
                 </select>
             </div>
 
-            <div class="col-md-3">
+            <div class="col-md-2">
                 <label class="form-label fw-bold">Precio máximo</label>
                 <input type="number" id="filtro-precio" class="form-control"
                        placeholder="Ej: 500" min="0">
             </div>
 
-            <div class="col-md-3">
+            <div class="col-md-2">
                 <label class="form-label fw-bold">Marca</label>
                 <input type="text" id="filtro-marca" class="form-control"
                        placeholder="Ej: Samsung">
@@ -42,12 +50,12 @@
     </div>
 </div>
 
-{{# Contador de resultados #}}
+{# Contador de resultados #}
 <p class="text-muted mb-3">
     Mostrando <span id="contador">{{ productos|length }}</span> productos
 </p>
 
-{{# Grid de productos #}}
+{# Grid de productos #}
 <div id="productos-grid" class="row">
     {% for producto in productos %}
     <div class="col-md-4 mb-4">
@@ -72,10 +80,12 @@
     {% endfor %}
 </div>
 
+</div>
 {% endblock %}
 
 {% block javascripts %}
     <script>
+        const filtroBusqueda  = document.getElementById('filtro-busqueda');
         const filtroCategoria = document.getElementById('filtro-categoria');
         const filtroPrecio    = document.getElementById('filtro-precio');
         const filtroMarca     = document.getElementById('filtro-marca');
@@ -83,10 +93,8 @@
         const contador        = document.getElementById('contador');
         const btnLimpiar      = document.getElementById('btn-limpiar');
 
-        // URL base de la ruta AJAX
         const urlFiltrar = "{{ path('catalogo_filtrar') }}";
 
-        // Función que construye la tarjeta HTML de un producto
         function renderProducto(p) {
             return `
             <div class="col-md-4 mb-4">
@@ -101,14 +109,13 @@
                         </div>
                     </div>
                 </div>
-            </div>
-        `;
+            </div>`;
         }
 
-        // Función principal que llama al endpoint AJAX
         function aplicarFiltros() {
             const params = new URLSearchParams();
 
+            if (filtroBusqueda.value)  params.set('busqueda', filtroBusqueda.value);
             if (filtroCategoria.value) params.set('categoria', filtroCategoria.value);
             if (filtroPrecio.value)    params.set('precioMax', filtroPrecio.value);
             if (filtroMarca.value)     params.set('marca', filtroMarca.value);
@@ -127,19 +134,19 @@
                 });
         }
 
-        // Escuchar cambios en los filtros con un pequeño retraso para no disparar en cada tecla
         let timeout;
         function filtroConRetraso() {
             clearTimeout(timeout);
             timeout = setTimeout(aplicarFiltros, 300);
         }
 
+        filtroBusqueda.addEventListener('input', filtroConRetraso);
         filtroCategoria.addEventListener('change', aplicarFiltros);
         filtroPrecio.addEventListener('input', filtroConRetraso);
         filtroMarca.addEventListener('input', filtroConRetraso);
 
-        // Limpiar todos los filtros
         btnLimpiar.addEventListener('click', () => {
+            filtroBusqueda.value  = '';
             filtroCategoria.value = '';
             filtroPrecio.value    = '';
             filtroMarca.value     = '';

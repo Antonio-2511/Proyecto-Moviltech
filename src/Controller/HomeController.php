@@ -2,9 +2,11 @@
 
 namespace App\Controller;
 
+use App\Entity\Producto;
 use App\Repository\ProductoRepository;
 use App\Repository\CategoriaRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Attribute\Route;
@@ -13,30 +15,36 @@ class HomeController extends AbstractController
 {
     #[Route('/', name: 'app_home')]
     public function index(
-        Request $request,
-        ProductoRepository $productoRepository,
+        ProductoRepository  $productoRepository,
         CategoriaRepository $categoriaRepository
     ): Response {
-
-        // Se obtiene el parámetro "categoria" de la URL (?categoria=ID)
-        $categoriaId = $request->query->get('categoria');
-
-        // Si hay filtro por categoría, se buscan solo los productos de esa categoría
-        if ($categoriaId) {
-            $productos = $productoRepository->findBy(
-                ['categoria' => $categoriaId],
-                ['nombre' => 'ASC'] // Orden alfabético
-            );
-        } else {
-            // Si no hay filtro, se muestran todos los productos
-            $productos = $productoRepository->findBy([], ['nombre' => 'ASC']);
-        }
-
-        // Se envían productos, categorías y categoría seleccionada a la vista
         return $this->render('home/index.html.twig', [
-            'productos' => $productos,
+            'productos'  => $productoRepository->findBy([], ['nombre' => 'ASC']),
             'categorias' => $categoriaRepository->findAll(),
-            'categoriaSeleccionada' => $categoriaId,
         ]);
+    }
+
+    #[Route('/filtrar', name: 'catalogo_filtrar', methods: ['GET'])]
+    public function filtrar(Request $request, ProductoRepository $productoRepository): JsonResponse
+    {
+        $categoriaId = $request->query->get('categoria') ? (int)   $request->query->get('categoria') : null;
+        $precioMax   = $request->query->get('precioMax')  ? (float) $request->query->get('precioMax')  : null;
+        $marca       = $request->query->get('marca')      ? trim($request->query->get('marca'))         : null;
+        $busqueda    = $request->query->get('busqueda')   ? trim($request->query->get('busqueda'))      : null;
+
+        $productos = $productoRepository->findByFiltros($categoriaId, $precioMax, $marca, $busqueda);
+
+        $data = array_map(static function (Producto $p) {
+            return [
+                'id'          => $p->getId(),
+                'nombre'      => $p->getNombre(),
+                'descripcion' => mb_substr($p->getDescripcion(), 0, 80) . '...',
+                'precio'      => $p->getPrecio(),
+                'stock'       => $p->getStock(),
+                'imagen'      => $p->getImagen(),
+            ];
+        }, $productos);
+
+        return new JsonResponse($data);
     }
 }
